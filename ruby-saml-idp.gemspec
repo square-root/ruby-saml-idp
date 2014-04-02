@@ -23,6 +23,7 @@ Gem::Specification.new do |s|
   s.require_paths = ["lib"]
   s.rdoc_options = ["--charset=UTF-8"]
   s.add_dependency('uuid')
+  s.add_dependency "xmldsig", '~> 0.2.1'
   s.add_development_dependency "rake"
   # s.add_development_dependency "rcov"
   s.add_development_dependency "rspec"
