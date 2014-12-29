@@ -25,10 +25,10 @@ Gem::Specification.new do |s|
   s.add_dependency('uuid')
   s.add_dependency "xmldsig", '~> 0.2.1'
   s.add_development_dependency "rake"
-  # s.add_development_dependency "rcov"
-  s.add_development_dependency "rspec"
-  s.add_development_dependency "ruby-saml"
+  s.add_development_dependency("pry", "~> 0.10")
+  s.add_development_dependency("rspec", "~> 3.0")
+  s.add_development_dependency("ruby-saml", "~> 0.8")
   s.add_development_dependency("rails", "~> 3.2")
-  s.add_development_dependency("capybara")
+  s.add_development_dependency("capybara", "~> 2.4.1")
 end
 

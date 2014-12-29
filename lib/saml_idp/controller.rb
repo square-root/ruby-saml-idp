@@ -1,4 +1,5 @@
 # encoding: utf-8
+
 module SamlIdp
   module Controller
     require 'openssl'
@@ -91,6 +92,7 @@ module SamlIdp
         issuer_uri = opts[:issuer_uri] || (defined?(request) && request.url) || "http://example.com"
         recipient_uri = opts[:recipient_uri] || @saml_acs_url || audience_uri
         include_xml_tag = opts[:include_xml_tag] || false
+		attributes_statement = attributes(opts[:attributes_provider], nameID)
 
         assertion = %[<saml:Assertion xmlns:saml="urn:oasis:names:tc:SAML:2.0:assertion" ID="_#{reference_id}" IssueInstant="#{now.iso8601}" Version="2.0"><saml:Issuer>#{issuer_uri}</saml:Issuer><saml:Subject><saml:NameID Format="urn:oasis:names:tc:SAML:1.1:nameid-format:unspecified">#{nameID}</saml:NameID><saml:SubjectConfirmation Method="urn:oasis:names:tc:SAML:2.0:cm:bearer"><saml:SubjectConfirmationData InResponseTo="#{@saml_request_id}" NotOnOrAfter="#{(now+3*60).iso8601}" Recipient="#{recipient_uri}"></saml:SubjectConfirmationData></saml:SubjectConfirmation></saml:Subject><saml:Conditions NotBefore="#{(now-5).iso8601}" NotOnOrAfter="#{(now+60*60).iso8601}"><saml:AudienceRestriction><saml:Audience>#{audience_uri}</saml:Audience></saml:AudienceRestriction></saml:Conditions><saml:AttributeStatement><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"><saml:AttributeValue>#{nameID}</saml:AttributeValue></saml:Attribute></saml:AttributeStatement><saml:AuthnStatement AuthnInstant="#{now.iso8601}" SessionIndex="_#{reference_id}"><saml:AuthnContext><saml:AuthnContextClassRef>urn:oasis:names:tc:SAML:2.0:ac:classes:unspecified</saml:AuthnContextClassRef></saml:AuthnContext></saml:AuthnStatement></saml:Assertion>]
         digest_value = Base64.encode64(algorithm.digest(assertion)).gsub(/\n/, '')
@@ -115,6 +117,10 @@ module SamlIdp
       def sign(data)
         key = OpenSSL::PKey::RSA.new(self.secret_key)
         Base64.encode64(key.sign(algorithm.new, data))
+      end
+
+      def attributes(provider, nameID)
+        provider ? provider : %[<saml:AttributeStatement><saml:Attribute Name="http://schemas.xmlsoap.org/ws/2005/05/identity/claims/emailaddress"><saml:AttributeValue>#{nameID}</saml:AttributeValue></saml:Attribute></saml:AttributeStatement>]
       end
   end
 end
