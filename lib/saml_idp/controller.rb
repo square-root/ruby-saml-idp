@@ -106,10 +106,19 @@ module SamlIdp
         # Just display the xml tag if we require it
         xml = include_xml_tag ? '<?xml version="1.0" encoding="UTF-8"?>' : ''
         xml += %[<samlp:Response ID="_#{response_id}" Version="2.0" IssueInstant="#{now.iso8601}" Destination="#{audience_uri}" Consent="urn:oasis:names:tc:SAML:2.0:consent:unspecified" InResponseTo="#{@saml_request_id}" xmlns:samlp="urn:oasis:names:tc:SAML:2.0:protocol"><Issuer xmlns="urn:oasis:names:tc:SAML:2.0:assertion">#{issuer_uri}</Issuer><samlp:Status><samlp:StatusCode Value="urn:oasis:names:tc:SAML:2.0:status:Success" /></samlp:Status>#{assertion_and_signature}</samlp:Response>]
+        p "######################################## XML ##############################################"
+        p xml
+        p "######################################## XML ##############################################"
 
         # Sign the document using XMLdsig in order to be sure that everthing is as expected
         document = Xmldsig::SignedDocument.new(xml)
+        p "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ document $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
+        p document
+        p "$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$ document $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$"
         final_doc = document.sign(OpenSSL::PKey::RSA.new(secret_key), false).gsub(/^\s+/, '').gsub(/\s+$/, '').gsub(/\n/, '')
+        p '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ final doc @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
+        p final_doc
+        p '@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@ final doc @@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@@'
         Base64.encode64(final_doc)
       end
 
