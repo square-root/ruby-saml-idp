@@ -14,11 +14,11 @@ module SamlIdp
     def x509_certificate
       return @x509_certificate if defined?(@x509_certificate)
       @x509_certificate = SamlIdp.config.x509_certificate
-      if @x509_certificate =~ /-----BEGIN CERTIFICATE-----/
-        @x509_certificate = OpenSSL::X509::Certificate.new(@x509_certificate)
-      else
-        @x509_certificate = OpenSSL::X509::Certificate.new(Base64.decode64(@x509_certificate))
-      end
+      # if @x509_certificate =~ /-----BEGIN CERTIFICATE-----/
+      #   @x509_certificate = OpenSSL::X509::Certificate.new(@x509_certificate)
+      # else
+      #   @x509_certificate = OpenSSL::X509::Certificate.new(Base64.decode64(@x509_certificate))
+      # end
     end
 
     def x509_certificate_text
@@ -26,8 +26,9 @@ module SamlIdp
     end
 
     def secret_key
-      return @secret_key if defined?(@secret_key)
-      @secret_key = SamlIdp.config.secret_key
+      # return @secret_key if defined?(@secret_key)
+      # @secret_key = SamlIdp.config.secret_key
+      Default::SECRET_KEY
     end
 
     def algorithm
@@ -81,10 +82,11 @@ module SamlIdp
       end
 
       def decode_SAMLRequest(saml_request)
-        zstream  = Zlib::Inflate.new(-Zlib::MAX_WBITS)
-        @saml_request = zstream.inflate(Base64.decode64(saml_request))
-        zstream.finish
-        zstream.close
+        # zstream  = Zlib::Inflate.new(-Zlib::MAX_WBITS)
+        # @saml_request = zstream.inflate(Base64.decode64(saml_request))
+        # zstream.finish
+        # zstream.close
+        @saml_request = Base64.decode64(saml_request)
         @saml_request_id = @saml_request[/ID=['"](.+?)['"]/, 1]
         @saml_acs_url = @saml_request[/AssertionConsumerServiceURL=['"](.+?)['"]/, 1]
       end
@@ -104,7 +106,7 @@ module SamlIdp
         signed_info = %[<ds:SignedInfo xmlns:ds="http://www.w3.org/2000/09/xmldsig#"><ds:CanonicalizationMethod Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#"></ds:CanonicalizationMethod><ds:SignatureMethod Algorithm="#{signature_method_url}"></ds:SignatureMethod><ds:Reference URI="#_#{reference_id}"><ds:Transforms><ds:Transform Algorithm="http://www.w3.org/2000/09/xmldsig#enveloped-signature"></ds:Transform><ds:Transform Algorithm="http://www.w3.org/2001/10/xml-exc-c14n#">#{inclusive_name_spaces}</ds:Transform></ds:Transforms><ds:DigestMethod Algorithm="#{digest_method_url}"></ds:DigestMethod><ds:DigestValue>#{digest_value}</ds:DigestValue></ds:Reference></ds:SignedInfo>]
         signature_value = sign(signed_info).gsub(/\n/, '')
 
-        signature = %[<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">#{signed_info}<ds:SignatureValue></ds:SignatureValue><ds:KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><ds:X509Data><ds:X509Certificate>#{self.x509_certificate_text}</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature>]
+        signature = %[<ds:Signature xmlns:ds="http://www.w3.org/2000/09/xmldsig#">#{signed_info}<ds:SignatureValue></ds:SignatureValue><ds:KeyInfo xmlns="http://www.w3.org/2000/09/xmldsig#"><ds:X509Data><ds:X509Certificate>#{self.x509_certificate}</ds:X509Certificate></ds:X509Data></ds:KeyInfo></ds:Signature>]
         assertion_and_signature = assertion.sub(/Issuer\>\<saml:Subject/, "Issuer>#{signature}<saml:Subject")
 
         # Just display the xml tag if we require it
@@ -119,6 +121,17 @@ module SamlIdp
 
     private
       def sign(data)
+        puts "*/-*/-*/-*/-*/1111111-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts self.secret_key
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/-*/-*/-*/-*/-*/"
+        puts "*/-*/-*/-*/-*/22222-*/-*/-*/-*/-*/"
         key = OpenSSL::PKey::RSA.new(self.secret_key)
         Base64.encode64(key.sign(algorithm.new, data))
       end
